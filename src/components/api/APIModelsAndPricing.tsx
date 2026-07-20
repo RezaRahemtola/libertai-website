@@ -3,10 +3,6 @@ import backgroundImageMobile from "@/assets/background-left-mobile.png";
 import { Brain, Eye, ExternalLink, Image, Lock, Settings, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
-import { useEffect, useState } from "react";
-
-const ALEPH_URL =
-	"https://api2.aleph.im/api/v0/aggregates/0xe1F7220D201C64871Cefb25320a8a588393eE508.json?keys=LTAI_PRICING";
 
 interface TextCapabilities {
 	context_window: number;
@@ -35,13 +31,82 @@ interface Model {
 	};
 }
 
-interface AlephResponse {
-	data: {
-		LTAI_PRICING: {
-			models: Model[];
-		};
-	};
-}
+// Snapshot of the LTAI_PRICING Aleph aggregate published by 0xe1F7220D201C64871Cefb25320a8a588393eE508, taken 2026-07-20
+const models: Model[] = [
+	{
+		id: "hermes-3-8b-tee",
+		name: "Hermes 3 8B (TEE)",
+		hf_id: "NousResearch/Hermes-3-Llama-3.1-8B",
+		pricing: { text: { price_per_million_input_tokens: 0.15, price_per_million_output_tokens: 0.6 } },
+		capabilities: {
+			text: { tee: true, vision: false, reasoning: false, context_window: 16000, function_calling: true },
+		},
+	},
+	{
+		id: "gemma-4-31b-it",
+		name: "Gemma 4 31B",
+		hf_id: "google/gemma-4-31b-it",
+		pricing: { text: { price_per_million_input_tokens: 0.15, price_per_million_output_tokens: 0.4 } },
+		capabilities: {
+			text: { tee: false, vision: true, reasoning: true, context_window: 262144, function_calling: true },
+		},
+	},
+	{
+		id: "qwen3.6-35b-a3b",
+		name: "Qwen3.6-35B-A3B",
+		hf_id: "Qwen/Qwen3.6-35B-A3B",
+		pricing: { text: { price_per_million_input_tokens: 0.15, price_per_million_output_tokens: 0.5 } },
+		capabilities: {
+			text: { tee: false, vision: true, reasoning: true, context_window: 262144, function_calling: true },
+		},
+	},
+	{
+		id: "qwen3.6-27b",
+		name: "Qwen3.6-27B",
+		hf_id: "Qwen/Qwen3.6-27B",
+		pricing: { text: { price_per_million_input_tokens: 0.15, price_per_million_output_tokens: 0.5 } },
+		capabilities: {
+			text: { tee: false, vision: true, reasoning: true, context_window: 262144, function_calling: true },
+		},
+	},
+	{
+		id: "qwen3.5-122b-a10b",
+		name: "Qwen3.5-122B-A10B",
+		hf_id: "Qwen/Qwen3.5-122B-A10B",
+		pricing: { text: { price_per_million_input_tokens: 0.25, price_per_million_output_tokens: 1.75 } },
+		capabilities: {
+			text: { tee: false, vision: true, reasoning: true, context_window: 262144, function_calling: true },
+		},
+	},
+	{
+		id: "deepseek-v4-flash",
+		name: "DeepSeek V4 Flash",
+		hf_id: "deepseek-ai/DeepSeek-V4-Flash",
+		pricing: { text: { price_per_million_input_tokens: 0.25, price_per_million_output_tokens: 1.75 } },
+		capabilities: {
+			text: { tee: false, vision: false, reasoning: true, context_window: 200000, function_calling: true },
+		},
+	},
+	{
+		id: "glm-5.2",
+		name: "GLM-5.2",
+		hf_id: "lukealonso/GLM-5.2-NVFP4",
+		pricing: { text: { price_per_million_input_tokens: 1.4, price_per_million_output_tokens: 4.4 } },
+		capabilities: {
+			text: { vision: false, reasoning: true, context_window: 262144, function_calling: true },
+		},
+	},
+	{
+		id: "z-image-turbo",
+		name: "Z-Image Turbo",
+		hf_id: "Tongyi-MAI/Z-Image-Turbo",
+		pricing: { image: 0.005 },
+		capabilities: { image: true },
+	},
+];
+
+const textModels = models.filter((m) => m.capabilities.text && m.pricing.text);
+const imageModels = models.filter((m) => m.capabilities.image && m.pricing.image);
 
 function CapabilityBadge({ icon, label }: { icon: React.ReactNode; label: string }) {
 	return (
@@ -72,28 +137,6 @@ function TextModelCapabilities({ capabilities }: { capabilities: TextCapabilitie
 }
 
 export function APIModelsAndPricing() {
-	const [textModels, setTextModels] = useState<Model[]>([]);
-	const [imageModels, setImageModels] = useState<Model[]>([]);
-	const [visible, setVisible] = useState(false);
-
-	useEffect(() => {
-		fetch(ALEPH_URL)
-			.then((res) => res.json())
-			.then((data: AlephResponse) => {
-				const models = data.data.LTAI_PRICING.models;
-				const text = models.filter((m) => m.capabilities.text && m.pricing.text);
-				const image = models.filter((m) => m.capabilities.image && m.pricing.image);
-				if (text.length > 0 || image.length > 0) {
-					setTextModels(text);
-					setImageModels(image);
-					setVisible(true);
-				}
-			})
-			.catch(() => {});
-	}, []);
-
-	if (!visible) return null;
-
 	return (
 		<section className="relative w-full py-20 lg:py-40 md:py-32 bg-background overflow-hidden">
 			{/* Background */}

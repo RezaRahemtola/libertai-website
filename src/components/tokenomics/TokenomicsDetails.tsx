@@ -1,6 +1,6 @@
 import { Coins, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { useTokenData } from "@/hooks/useTokenData";
 
@@ -12,17 +12,28 @@ interface TokenData {
 	suffix?: string;
 }
 
-interface CoinGeckoResponse {
-	market_data: {
-		current_price: {
-			usd: number;
-		};
-		market_cap: {
-			usd: number;
-		};
-		total_supply: number;
-	};
-}
+// Snapshot of CoinGecko market data for LTAI, taken 2026-07-20
+const tokenData: TokenData[] = [
+	{
+		label: "Price per Token",
+		value: "$0.10",
+		numericValue: 0.09631,
+		prefix: "$",
+	},
+	{
+		label: "Market Cap",
+		value: "$1.7M",
+		numericValue: 1.697126,
+		suffix: "M",
+		prefix: "$",
+	},
+	{
+		label: "Total Supply",
+		value: "27.3M",
+		numericValue: 27.310903,
+		suffix: "M",
+	},
+];
 
 export function TokenomicsDetails() {
 	const sectionRef = useRef<HTMLDivElement>(null);
@@ -37,69 +48,6 @@ export function TokenomicsDetails() {
 	const hasAnimatedBars = useRef(false);
 
 	const { poolsStats } = useTokenData();
-
-	const [tokenData, setTokenData] = useState<TokenData[]>([
-		{
-			label: "Price per Token",
-			value: "$0.00",
-			numericValue: 0,
-			prefix: "$",
-		},
-		{
-			label: "Market Cap",
-			value: "$0.0M",
-			numericValue: 0,
-			suffix: "M",
-			prefix: "$",
-		},
-		{
-			label: "Total Supply",
-			value: "22.2M",
-			numericValue: 22.2,
-			suffix: "M",
-		},
-	]);
-
-	const fetchTokenData = async () => {
-		try {
-			const response = await fetch(
-				"https://api.coingecko.com/api/v3/coins/libertai?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false",
-			);
-			const data: CoinGeckoResponse = await response.json();
-
-			if (data.market_data) {
-				const price = data.market_data.current_price.usd;
-				const marketCap = data.market_data.market_cap.usd;
-				const totalSupply = data.market_data.total_supply;
-				const marketCapInMillions = marketCap / 1000000;
-				const totalSupplyInMillions = totalSupply / 1000000;
-
-				setTokenData((prev) => [
-					{
-						...prev[0],
-						value: `$${price.toFixed(2)}`,
-						numericValue: price,
-					},
-					{
-						...prev[1],
-						value: `$${marketCapInMillions.toFixed(1)}M`,
-						numericValue: marketCapInMillions,
-					},
-					{
-						...prev[2],
-						value: `${totalSupplyInMillions.toFixed(1)}M`,
-						numericValue: totalSupplyInMillions,
-					},
-				]);
-			}
-		} catch (error) {
-			console.error("Failed to fetch token data:", error);
-		}
-	};
-
-	useEffect(() => {
-		fetchTokenData().then();
-	}, []);
 
 	useEffect(() => {
 		// Only animate if we have complete data and haven't animated yet
@@ -263,7 +211,7 @@ export function TokenomicsDetails() {
 		}
 
 		return () => observer.disconnect();
-	}, [tokenData]);
+	}, []);
 
 	return (
 		<section ref={sectionRef} className="w-full bg-background py-20 lg:py-40 px-4 md:px-6 lg:px-8">
